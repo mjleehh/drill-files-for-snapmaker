@@ -1,0 +1,20 @@
+[tool.poetry]
+name = "drill-files-for-snapmaker"
+version = "0.1.0"
+description = "Convert Excellion drill files (such as those produced by KiCad) into G-Code for SnapMaker CNC usage"
+authors = ["Michael Jonathan Lee"]
+license = "LGPL"
+readme = "README.md"
+packages = [{include = "snapmaker_drill"}]
+
+[tool.poetry.dependencies]
+python = "^3.10"
+Pillow = "^9.5.0"
+typer = "^0.7.0"
+
+[tool.poetry.scripts]
+snapmaker-drill = "snapmaker_drill:cli"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
