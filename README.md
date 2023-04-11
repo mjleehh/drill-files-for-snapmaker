@@ -1,4 +1,4 @@
-# Snapmaker Drill
+# drill4snap
 
 **DISCLAIMER: Take great care and check your gcode files before using them! No responsibility is taken by the developer of this software!**
 

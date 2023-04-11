@@ -1,6 +1,6 @@
-from dataclasses import dataclass, field
-from enum import Flag, auto
-from typing import Final, Tuple, Dict, List, Optional
+from typing import Final, Dict, Optional
+
+from drill4snap.jobs import ToolJob, DiffMode, Units, ToolJobSegment
 
 HEADER_START = 'M48'
 HEADER_END_1 = 'M95'
@@ -20,34 +20,11 @@ MODE_DRILLING = 'G05'
 MODE_ROUTING = 'G00'
 
 
-class DiffMode(Flag):
-    ABSOLUTE = auto()
-    RELATIVE = auto()
-
-
-class Units(Flag):
-    MM = auto()
-    INCH = auto()
-
-
-@dataclass
-class ToolJobSegment:
-    diff_mode: DiffMode
-    units: Units
-    holes: List[Tuple[float, float]] = field(default_factory=list)
-
-
-@dataclass
-class ToolJob:
-    diameter: float
-    segments: List[ToolJobSegment] = field(default_factory=list)
-
-
 def is_end_of_header(command: str) -> bool:
     return command == HEADER_END_1 or command == HEADER_END_2
 
 
-class ParseError(ValueError):
+class DrillFileError(ValueError):
     def __init__(self, message: str):
         super().__init__(message)
 
@@ -78,7 +55,7 @@ class ExcellonFileParser:
 
         while not is_end_of_header(command := self._get_next_command()):
             if command == FORMAT_1_LINE:
-                raise ParseError('format type 1 not supported')
+                raise DrillFileError('format type 1 not supported')
             elif command == FORMAT_2_LINE:
                 pass
             elif command == UNITS_MM:
@@ -107,7 +84,7 @@ class ExcellonFileParser:
             elif command == MODE_DRILLING:
                 self._drilling_mode = True
             elif command == MODE_ROUTING:
-                raise ParseError('routing mode command found in drill file')
+                raise DrillFileError('routing mode command found in drill file')
             else:
                 print('unsupported command', command)
 
@@ -116,7 +93,7 @@ class ExcellonFileParser:
         tool_num = int(tool_num)
         diameter = float(diameter)
         if tool_num in self._tool_jobs:
-            raise ParseError(f'tool {tool_num} has multiple definitions')
+            raise DrillFileError(f'tool {tool_num} has multiple definitions')
         self._tool_jobs[tool_num] = ToolJob(diameter=diameter)
 
     def _switch_units(self, units: Units):
@@ -142,15 +119,15 @@ class ExcellonFileParser:
             return
 
         if tool_number not in self._tool_jobs:
-            raise ParseError(f'tool {tool_number} has not been defined')
+            raise DrillFileError(f'tool {tool_number} has not been defined')
         self._active_tool = tool_number
         self._set_params_changed()
 
     def _add_hole(self, command: str):
         if self._active_tool < 1:
-            raise ParseError('not tool set for operation')
+            raise DrillFileError('not tool set for operation')
         if not self._drilling_mode:
-            raise ParseError('drilling mode not explicitly set')
+            raise DrillFileError('drilling mode not explicitly set')
 
         x, y = command[1:].split('Y')
         x = float(x)
@@ -174,4 +151,7 @@ class ExcellonFileParser:
             line = line.strip('\t\r\n ')
             if line != '' and not line.startswith(';'):
                 return line
-        raise ParseError('unexpected end of file')
+        raise DrillFileError('unexpected end of file')
+
+
+__all__ = ['DrillFileError', 'ExcellonFileParser']

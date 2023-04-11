@@ -26,9 +26,13 @@ DEVICE_TYPE_ARG_TO_NAME_MAPPING = {
 
 
 def main(
-        safe_height: float = typer.Option(25.0, help='travel height above work origin in mm'),
-        spindle_power: int = typer.Option(100, help='percentage of maximum spindle power'),
-        device: DeviceTypeArgs = typer.Option(DeviceTypeArgs.s2l, help='specify the target device'),
+        height: float = typer.Option(25.0, help='travel height above work origin in mm'),
+        power: int = typer.Option(100, help='spindle power [%]'),
+        depth: float = typer.Option(2.0, help='drill depth [mm]'),
+        sdrill: int = typer.Option(300, help='vertical drill motion speed [mm/min]'),
+        smove: int = typer.Option(1500, help='vertical motion speed [mm/min]'),
+        stravel: int = typer.Option(1500, help='vertical travel speed when not working [mm/min]'),
+        device: DeviceTypeArgs = typer.Option(DeviceTypeArgs.s2l, help='specify the target device (defaults to A350)'),
         drill_file: str = typer.Argument(..., help='Excellon .drl file to convert'),
 ):
     """
@@ -41,14 +45,16 @@ def main(
     Licenced under LGPL
     """
 
-    print(device)
-
-    result = ExcellonFileParser(in_file_path=drill_file).parse()
-    for tool_job in result.values():
+    jobs = ExcellonFileParser(in_file_path=drill_file).parse()
+    for tool_job in jobs.values():
         GcodeWriter(
             tool_job, DEVICE_TYPE_ARG_TO_NAME_MAPPING[device],
-            spindle_power=spindle_power,
-            safe_height=safe_height
+            spindle_power=power,
+            travel_height=height,
+            drill_depth=depth,
+            drill_speed_z=sdrill,
+            travel_speed_z=stravel,
+            travel_speed_xy=smove,
         ).write(Path(drill_file).stem)
 
 
