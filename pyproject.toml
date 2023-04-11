@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "drill4snap"
-version = "0.1.0"
+version = "0.2.0"
 description = "Convert Excellion drill files (such as those produced by KiCad) into G-Code for SnapMaker CNC usage"
 authors = ["Michael Jonathan Lee"]
 license = "LGPL"
