@@ -1,5 +1,8 @@
 .idea
 __pycache__
+dist
 *.cnc
 *.gcode
 *.drl
+*.tar.gz
+*.whl
